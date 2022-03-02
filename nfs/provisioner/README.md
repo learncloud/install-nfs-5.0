@@ -82,7 +82,7 @@ sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-
 sample yaml 설정들의 **기본값**은 아래와 같습니다.
 
 - namespace: nfs
-- storageclass 이름: nfs
+- storageclass 이름: nfs 
 - pvc delete 시에 nfs 서버 내 directory 삭제 여부: 삭제
 
 
@@ -91,14 +91,14 @@ sample yaml 설정들의 **기본값**은 아래와 같습니다.
 1. provisioner를 배포할 k8s namespace로 치환하여 namespace와 rbac 관련 리소스를 먼저 배포합니다.
 
 ``` shell
-$ NS={배포할 namespace name}
-$ NAMESPACE=${NS:-nfs}
+NS={배포할 namespace name}
+NAMESPACE=${NS:-nfs}
 
-$ sed -i'' "s/name:.*/name: $NAMESPACE/g" ./deploy/namespace.yaml
-$ sed -i'' "s/namespace:.*/namespace: $NAMESPACE/g" ./deploy/rbac.yaml ./deploy/deployment.yaml
+sed -i'' "s/name:.*/name: $NAMESPACE/g" ./deploy/namespace.yaml
+sed -i'' "s/namespace:.*/namespace: $NAMESPACE/g" ./deploy/rbac.yaml ./deploy/deployment.yaml
 
-$ kubectl apply -f deploy/namespace.yaml
-$ kubectl apply -f deploy/rbac.yaml
+kubectl apply -f deploy/namespace.yaml
+kubectl apply -f deploy/rbac.yaml
 ```
 
 2. nfs server 정보를 `deployment.yaml` 에 기입하여 provisioner를 배포합니다. nfs server 와 path key 값에 대한 value 값을 적어주시면 됩니다. 
@@ -139,7 +139,7 @@ $ kubectl apply -f deploy/deployment.yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs
+  name: nfs 
 # provisioner name must match deployment's env PROVISIONER_NAME'
 provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 parameters:
@@ -314,7 +314,7 @@ spec:
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs
+  name: nfs #storage class이름 기재
 # provisioner name must match deployment's env PROVISIONER_NAME'
 provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 parameters:
