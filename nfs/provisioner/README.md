@@ -123,36 +123,28 @@ kubectl apply -f deploy/rbac.yaml
 2. nfs server 정보를 `deployment.yaml` 에 기입하여 provisioner를 배포합니다. nfs server 와 path key 값에 대한 value 값을 적어주시면 됩니다. 
 
 ``` yaml
-# deploy/deployment.yaml
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nfs-client-provisioner
-  labels:
-    app: nfs-client-provisioner
-  # replace with namespace where provisioner is deployed
-  namespace: nfs
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: nfs-client-provisioner
-  template:
-    metadata:
-      labels:
-        app: nfs-client-provisioner
-    spec:
-      serviceAccountName: nfs-client-provisioner
-      containers:
-        - name: nfs-client-provisioner
-          image: >-
-            gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:v4.0.0
-          volumeMounts:
-            - name: nfs-client-root
-              mountPath: /persistentvolumes
+
+          env:
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner
+            - name: NFS_SERVER
+              # REPLACE with your nfs server
+							#해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
+              value: 192.168.178.39
+            - name: NFS_PATH
+              # REPLACE with your nfs exported path
+							#해당 부분 nfs서버 파일이름 입력
+              value: /NFS-DIR/cloud01
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            # REPLACE with your nfs server
+						#해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
+            server: 192.168.178.39
+            # REPLACE with your nfs exported path
+						#해당 부분 nfs서버 파일이름 입력
+            path: /NFS-DIR/cloud01
+            
               
 ```
 
