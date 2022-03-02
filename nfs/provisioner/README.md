@@ -162,7 +162,7 @@ spec:
               value: 192.168.178.39
             - name: NFS_PATH
               # REPLACE with your nfs exported path
-							#해당 부분 nfs서버 파일이름 입력
+	#해당 부분 nfs서버 파일이름 입력
               value: /NFS-DIR/cloud01
       volumes:
         - name: nfs-client-root
