@@ -189,8 +189,9 @@ metadata:
 ```
 
 ``` shell
-$ kubectl apply -f deploy/deployment.yaml
+kubectl apply -f deploy/deployment.yaml
 ```
+
 
 3. `class.yaml` 에서 provisioner 이름을 `deployment.yaml` 에서 정의한 env `PROVISIONER_NAME` 값과 동일하게 기입합니다.
 
@@ -211,7 +212,7 @@ parameters:
 ```
 
 ``` shell
-$ kubectl apply -f deploy/class.yaml
+kubectl apply -f deploy/class.yaml
 ```
 
 
