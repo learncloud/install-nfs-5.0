@@ -193,7 +193,7 @@ kubectl apply -f deploy/deployment.yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs
+  name: nfs #storage class이름 기재
 # provisioner name must match deployment's env PROVISIONER_NAME'
 provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 parameters:
