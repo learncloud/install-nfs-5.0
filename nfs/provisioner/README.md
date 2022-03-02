@@ -106,7 +106,7 @@ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs
   
 ```
 
-### Helm 사용하지 않고 yaml로 배포할 경우
+### Helm 사용하지 않고 yaml로 배포할 경우 ( **현재 이 버전으로 진행** )
 
 1. provisioner를 배포할 k8s namespace로 치환하여 namespace와 rbac 관련 리소스를 먼저 배포합니다.
 
@@ -232,7 +232,7 @@ $ helm install nfs-provisioner-2 nfs-subdir-external-provisioner/nfs-subdir-exte
     --namespace nfs
 ```
 
-#### Helm 사용하지 않는 경우
+#### Helm 사용하지 않는 경우  ( **현재 이 버전으로 진행** )
 
 1. 이전 과정에서 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다. 별도로 추가 생성은 필요하지 않습니다.
 2. `deployment.yaml` 에서 다른 nfs provisioner와 겹치지 않은 unique 한 provisioner 이름과 사용할 nfs server 정보를 기입합니다.
