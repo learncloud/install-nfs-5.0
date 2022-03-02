@@ -47,6 +47,7 @@ mkdir -p ~/nfs-install
 export NFS_HOME=~/nfs-install
 export NFS_PROVISIONER_VERSION=v4.0.0
 cd $NFS_HOME
+
 ```
 
 외부 네트워크 통신이 가능한 환경에서 도커 이미지를 다운로드
@@ -54,15 +55,16 @@ cd $NFS_HOME
 ``` shell
 sudo docker pull gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} > nfs_${NFS_PROVISIONER_VERSION}.tar
+
 ```
 
 배포 yaml 다운로드
 
 ``` shell
-
 git clone https://github.com/learncloud/install-nfs-5.0.git
 mv install-nfs-5.0/nfs/provisioner/deploy/ .
 rm -rf install-nfs-5.0/
+
 ```
 
 다운로드 받은 파일들을 폐쇄망 환경으로 이동시킨 뒤 사용하려는 registry에 이미지를 push
@@ -71,10 +73,10 @@ rm -rf install-nfs-5.0/
 sudo docker load < nfs_${NFS_PROVISIONER_VERSION}.tar
 
 export REGISTRY=192.168.178.17:5000
-
 sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 
 sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+
 ```
 
 ## 배포 가이드
@@ -82,11 +84,28 @@ sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-
 sample yaml 설정들의 **기본값**은 아래와 같습니다.
 
 - namespace: nfs
-- storageclass 이름: nfs 
+- storageclass 이름: nfs
 - pvc delete 시에 nfs 서버 내 directory 삭제 여부: 삭제
 
+### Helm 사용할 경우
 
-### Helm 사용하지 않는 경우
+- nfs server 주소와 exported path, provisioner를 배포할 k8s namespace를 명시하여 helm chart를 설치합니다.
+- 예시에 정의된 필드 외에 다른 기본값 변경이 필요한 특수한 경우에는 [이 configuration table](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/tree/master/charts/nfs-subdir-external-provisioner#configuration)에서 parameter 확인이 가능합니다.
+- `archiveOnDelete`를 `true`로 설정하는 경우에는 `archived-` 라는 prefix가 directory 이름에 추가되고, directory 내 데이터는 nfs server 내에 계속 존재하게 됩니다.
+
+``` shell
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+  --set nfs.server=192.168.7.16 \
+  --set nfs.path=/mnt/nfs-shared-dir \
+  --set storageClass.name=nfs \
+  --set storageClass.archiveOnDelete=false \
+  --namespace nfs \
+  --create-namespace
+  
+```
+
+### Helm 사용하지 않고 yaml로 배포할 경우
 
 1. provisioner를 배포할 k8s namespace로 치환하여 namespace와 rbac 관련 리소스를 먼저 배포합니다.
 
@@ -105,26 +124,40 @@ kubectl apply -f deploy/rbac.yaml
 
 ``` yaml
 # deploy/deployment.yaml
-          env:
-            - name: PROVISIONER_NAME
-              value: k8s-sigs.io/nfs-subdir-external-provisioner
-            - name: NFS_SERVER
-              # REPLACE with your nfs server
-              value: 192.168.7.16
-            - name: NFS_PATH
-              # REPLACE with your nfs exported path
-              value: /mnt/nfs-shared-dir
-      volumes:
-        - name: nfs-client-root
-          nfs:
-            # REPLACE with your nfs server
-            server: 192.168.7.16
-            # REPLACE with your nfs exported path
-            path: /mnt/nfs-shared-dir
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: nfs
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          image: >-
+            gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:v4.0.0
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+              
 ```
 
 ``` shell
-$ kubectl apply -f deploy/deployment.yaml
+kubectl apply -f deploy/deployment.yaml
 ```
 
 3. storageclass를 배포합니다. `class.yaml` 에서 storageclass 이름이나 pvc delete 시에 nfs server 내 폴더 삭제 여부, sub directory 생성 패턴 등을 설정 할 수 있습니다. 
@@ -139,7 +172,7 @@ $ kubectl apply -f deploy/deployment.yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs 
+  name: nfs
 # provisioner name must match deployment's env PROVISIONER_NAME'
 provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 parameters:
@@ -150,7 +183,32 @@ parameters:
 ```
 
 ``` shell
-$ kubectl apply -f deploy/class.yaml
+kubectl apply -f deploy/class.yaml
+
+```
+
+
+### 여러개의 NFS 서버를 사용하는 경우
+
+> 볼륨 프로비저닝을 위한 NFS 서버를 추가하거나, 여러개의 NFS 서버를 사용하고자 하는 경우에는 NFS 서버 마다 provisioner 와 storage class 추가 생성이 필요합니다.
+
+
+#### Helm 사용할 경우
+
+- 이미 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다.
+- unique한 nfs provisioner 이름 지정이 필요하고, 사용할 nfs 서버 정보를 기입하여 주시면 됩니다.
+
+``` shell
+$ helm install nfs-provisioner-2 nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --set nfs.server=192.168.7.17 \
+    --set nfs.path=/mnt/nfs-shared-dir \
+    --set storageClass.name=nfs2 \
+    --set storageClass.archiveOnDelete=false \
+    --set storageClass.provisionerName=nfs-provisioner-2 \
+    --set serviceAccount.create=false \
+    --set serviceAccount.name=nfs-client-provisioner \
+    --set rbac.create=false \
+    --namespace nfs
 ```
 
 #### Helm 사용하지 않는 경우
@@ -189,9 +247,8 @@ metadata:
 ```
 
 ``` shell
-kubectl apply -f deploy/deployment.yaml
+$ kubectl apply -f deploy/deployment.yaml
 ```
-
 
 3. `class.yaml` 에서 provisioner 이름을 `deployment.yaml` 에서 정의한 env `PROVISIONER_NAME` 값과 동일하게 기입합니다.
 
@@ -212,48 +269,7 @@ parameters:
 ```
 
 ``` shell
-kubectl apply -f deploy/class.yaml
-```
-
-
-### Helm 사용할 경우
-
-- nfs server 주소와 exported path, provisioner를 배포할 k8s namespace를 명시하여 helm chart를 설치합니다.
-- 예시에 정의된 필드 외에 다른 기본값 변경이 필요한 특수한 경우에는 [이 configuration table](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/tree/master/charts/nfs-subdir-external-provisioner#configuration)에서 parameter 확인이 가능합니다.
-- `archiveOnDelete`를 `true`로 설정하는 경우에는 `archived-` 라는 prefix가 directory 이름에 추가되고, directory 내 데이터는 nfs server 내에 계속 존재하게 됩니다.
-
-``` shell
-helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=192.168.7.16 \
-    --set nfs.path=/mnt/nfs-shared-dir \
-    --set storageClass.name=nfs \
-    --set storageClass.archiveOnDelete=false \
-    --namespace nfs \
-    --create-namespace
-```
-
-
-### 여러개의 NFS 서버를 사용하는 경우
-
-> 볼륨 프로비저닝을 위한 NFS 서버를 추가하거나, 여러개의 NFS 서버를 사용하고자 하는 경우에는 NFS 서버 마다 provisioner 와 storage class 추가 생성이 필요합니다.
-
-#### Helm 사용할 경우
-
-- 이미 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다.
-- unique한 nfs provisioner 이름 지정이 필요하고, 사용할 nfs 서버 정보를 기입하여 주시면 됩니다.
-
-``` shell
-$ helm install nfs-provisioner-2 nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=192.168.7.17 \
-    --set nfs.path=/mnt/nfs-shared-dir \
-    --set storageClass.name=nfs2 \
-    --set storageClass.archiveOnDelete=false \
-    --set storageClass.provisionerName=nfs-provisioner-2 \
-    --set serviceAccount.create=false \
-    --set serviceAccount.name=nfs-client-provisioner \
-    --set rbac.create=false \
-    --namespace nfs
+$ kubectl apply -f deploy/class.yaml
 ```
 
 ### nfs mount option이 별도로 지정 필요한 경우
@@ -315,7 +331,7 @@ spec:
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: nfs #storage class이름 기재
+  name: nfs
 # provisioner name must match deployment's env PROVISIONER_NAME'
 provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
 parameters:
