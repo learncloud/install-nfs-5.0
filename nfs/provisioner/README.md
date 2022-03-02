@@ -41,25 +41,28 @@
 작업 디렉토리 생성 및 환경 설정
 
 ``` shell
-$ mkdir -p ~/nfs-install
-$ export NFS_HOME=~/nfs-install
-$ export NFS_PROVISIONER_VERSION=v4.0.0
-$ cd $NFS_HOME
+yum -y install nfs-utils
+
+mkdir -p ~/nfs-install
+export NFS_HOME=~/nfs-install
+export NFS_PROVISIONER_VERSION=v4.0.0
+cd $NFS_HOME
 ```
 
 외부 네트워크 통신이 가능한 환경에서 도커 이미지를 다운로드
 
 ``` shell
-$ sudo docker pull gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
-$ sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} > nfs_${NFS_PROVISIONER_VERSION}.tar
+sudo docker pull gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} > nfs_${NFS_PROVISIONER_VERSION}.tar
 ```
 
 배포 yaml 다운로드
 
 ``` shell
-$ git clone https://github.com/tmax-cloud/hypersds-wiki.git
-$ mv hypersds-wiki/nfs/provisioner/deploy/ .
-$ rm -rf hypersds-wiki/
+
+git clone https://github.com/learncloud/install-nfs-5.0.git
+mv hypersds-wiki/nfs/provisioner/deploy/ .
+rm -rf hypersds-wiki/
 ```
 
 다운로드 받은 파일들을 폐쇄망 환경으로 이동시킨 뒤 사용하려는 registry에 이미지를 push
