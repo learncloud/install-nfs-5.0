@@ -61,19 +61,20 @@ sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:
 ``` shell
 
 git clone https://github.com/learncloud/install-nfs-5.0.git
-mv hypersds-wiki/nfs/provisioner/deploy/ .
-rm -rf hypersds-wiki/
+mv install-nfs-5.0/nfs/provisioner/deploy/ .
+rm -rf install-nfs-5.0/
 ```
 
 다운로드 받은 파일들을 폐쇄망 환경으로 이동시킨 뒤 사용하려는 registry에 이미지를 push
 
 ``` shell
-$ sudo docker load < nfs_${NFS_PROVISIONER_VERSION}.tar
+sudo docker load < nfs_${NFS_PROVISIONER_VERSION}.tar
 
-$ export REGISTRY=123.456.789.00:5000
-$ sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+export REGISTRY=192.168.178.17:5000
 
-$ sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+
+sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 ```
 
 ## 배포 가이드
@@ -84,22 +85,6 @@ sample yaml 설정들의 **기본값**은 아래와 같습니다.
 - storageclass 이름: nfs
 - pvc delete 시에 nfs 서버 내 directory 삭제 여부: 삭제
 
-### Helm 사용할 경우
-
-- nfs server 주소와 exported path, provisioner를 배포할 k8s namespace를 명시하여 helm chart를 설치합니다.
-- 예시에 정의된 필드 외에 다른 기본값 변경이 필요한 특수한 경우에는 [이 configuration table](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/tree/master/charts/nfs-subdir-external-provisioner#configuration)에서 parameter 확인이 가능합니다.
-- `archiveOnDelete`를 `true`로 설정하는 경우에는 `archived-` 라는 prefix가 directory 이름에 추가되고, directory 내 데이터는 nfs server 내에 계속 존재하게 됩니다.
-
-``` shell
-$ helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-$ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=192.168.7.16 \
-    --set nfs.path=/mnt/nfs-shared-dir \
-    --set storageClass.name=nfs \
-    --set storageClass.archiveOnDelete=false \
-    --namespace nfs \
-    --create-namespace
-```
 
 ### Helm 사용하지 않는 경우
 
@@ -168,28 +153,6 @@ parameters:
 $ kubectl apply -f deploy/class.yaml
 ```
 
-### 여러개의 NFS 서버를 사용하는 경우
-
-> 볼륨 프로비저닝을 위한 NFS 서버를 추가하거나, 여러개의 NFS 서버를 사용하고자 하는 경우에는 NFS 서버 마다 provisioner 와 storage class 추가 생성이 필요합니다.
-
-#### Helm 사용할 경우
-
-- 이미 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다.
-- unique한 nfs provisioner 이름 지정이 필요하고, 사용할 nfs 서버 정보를 기입하여 주시면 됩니다.
-
-``` shell
-$ helm install nfs-provisioner-2 nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
-    --set nfs.server=192.168.7.17 \
-    --set nfs.path=/mnt/nfs-shared-dir \
-    --set storageClass.name=nfs2 \
-    --set storageClass.archiveOnDelete=false \
-    --set storageClass.provisionerName=nfs-provisioner-2 \
-    --set serviceAccount.create=false \
-    --set serviceAccount.name=nfs-client-provisioner \
-    --set rbac.create=false \
-    --namespace nfs
-```
-
 #### Helm 사용하지 않는 경우
 
 1. 이전 과정에서 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다. 별도로 추가 생성은 필요하지 않습니다.
@@ -249,6 +212,47 @@ parameters:
 
 ``` shell
 $ kubectl apply -f deploy/class.yaml
+```
+
+
+### Helm 사용할 경우
+
+- nfs server 주소와 exported path, provisioner를 배포할 k8s namespace를 명시하여 helm chart를 설치합니다.
+- 예시에 정의된 필드 외에 다른 기본값 변경이 필요한 특수한 경우에는 [이 configuration table](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/tree/master/charts/nfs-subdir-external-provisioner#configuration)에서 parameter 확인이 가능합니다.
+- `archiveOnDelete`를 `true`로 설정하는 경우에는 `archived-` 라는 prefix가 directory 이름에 추가되고, directory 내 데이터는 nfs server 내에 계속 존재하게 됩니다.
+
+``` shell
+helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --set nfs.server=192.168.7.16 \
+    --set nfs.path=/mnt/nfs-shared-dir \
+    --set storageClass.name=nfs \
+    --set storageClass.archiveOnDelete=false \
+    --namespace nfs \
+    --create-namespace
+```
+
+
+### 여러개의 NFS 서버를 사용하는 경우
+
+> 볼륨 프로비저닝을 위한 NFS 서버를 추가하거나, 여러개의 NFS 서버를 사용하고자 하는 경우에는 NFS 서버 마다 provisioner 와 storage class 추가 생성이 필요합니다.
+
+#### Helm 사용할 경우
+
+- 이미 배포된 namespace와 rbac 관련 리소스는 그대로 사용하실 수 있습니다.
+- unique한 nfs provisioner 이름 지정이 필요하고, 사용할 nfs 서버 정보를 기입하여 주시면 됩니다.
+
+``` shell
+$ helm install nfs-provisioner-2 nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+    --set nfs.server=192.168.7.17 \
+    --set nfs.path=/mnt/nfs-shared-dir \
+    --set storageClass.name=nfs2 \
+    --set storageClass.archiveOnDelete=false \
+    --set storageClass.provisionerName=nfs-provisioner-2 \
+    --set serviceAccount.create=false \
+    --set serviceAccount.name=nfs-client-provisioner \
+    --set rbac.create=false \
+    --namespace nfs
 ```
 
 ### nfs mount option이 별도로 지정 필요한 경우
