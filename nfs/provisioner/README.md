@@ -158,20 +158,20 @@ spec:
               value: k8s-sigs.io/nfs-subdir-external-provisioner
             - name: NFS_SERVER
               # REPLACE with your nfs server
-							#해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
+              #해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
               value: 192.168.178.39
             - name: NFS_PATH
               # REPLACE with your nfs exported path
-	#해당 부분 nfs서버 파일이름 입력
+              #해당 부분 nfs서버 파일이름 입력
               value: /NFS-DIR/cloud01
       volumes:
         - name: nfs-client-root
           nfs:
             # REPLACE with your nfs server
-	    #해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
+            #해당 부분 nfs서버 입력 // 부서에서 nfs서버라고 지정해준IP임
             server: 192.168.178.39
             # REPLACE with your nfs exported path
-	    #해당 부분 nfs서버 파일이름 입력
+            #해당 부분 nfs서버 파일이름 입력
             path: /NFS-DIR/cloud01
          
 ```
