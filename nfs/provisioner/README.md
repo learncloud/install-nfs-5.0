@@ -46,6 +46,8 @@ yum -y install nfs-utils
 mkdir -p ~/00.nfs
 export NFS_HOME=~/00.nfs
 export NFS_PROVISIONER_VERSION=v4.0.0
+export REGISTRY={IP}:5000
+#ex) export REGISTRY=192.168.178.17:5000
 cd $NFS_HOME
 
 ```
@@ -63,7 +65,7 @@ sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:
 ``` shell
 sudo docker load < nfs_${NFS_PROVISIONER_VERSION}.tar
 
-export REGISTRY=192.168.178.17:5000
+
 sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 
 sudo docker push ${REGISTRY}/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
