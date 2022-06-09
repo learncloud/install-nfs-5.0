@@ -74,7 +74,7 @@ rm -rf install-nfs-5.0/
 sudo docker load < nfs_${NFS_PROVISIONER_VERSION}.tar
 
 export REGISTRY=192.168.178.17:5000
-sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
+sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION} ${REGISTRY}/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 
 sudo docker push ${REGISTRY}/gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 
