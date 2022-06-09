@@ -19,7 +19,7 @@
 
 ## Prerequisites
 
-1. 본 가이드에서는 이미 NFS 서버가 존재하며 NFS provisioner를 배포할 k8s 환경과 통신이 가능함을 가정합니다.
+1. 본 가이드에서는 **이미 NFS 서버가 존재**하며 NFS provisioner를 배포할 k8s 환경과 통신이 가능함을 가정합니다.
 2. k8s 클러스터의 모든 노드에는 `nfs-utils` 패키지 설치가 필요합니다.
     - taint 나 toleration property를 사용하는 경우에는 nfs 서버를 통해 volume provisioning 기능 제공할 k8s 노드에만 해당 패키지를 설치해주셔도 됩니다.
 3. NFS 서버사용을 위해 사전에 필요한 접속 정보들은 아래와 같습니다.
