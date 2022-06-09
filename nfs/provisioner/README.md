@@ -43,8 +43,8 @@
 ``` shell
 yum -y install nfs-utils
 
-mkdir -p ~/nfs-install
-export NFS_HOME=~/nfs-install
+mkdir -p ~/00.nfs
+export NFS_HOME=~/00.nfs
 export NFS_PROVISIONER_VERSION=v4.0.0
 cd $NFS_HOME
 
