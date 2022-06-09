@@ -58,16 +58,6 @@ sudo docker save gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:
 
 ```
 
-
-배포 yaml 다운로드
-
-``` shell
-git clone https://github.com/learncloud/install-nfs-5.0.git
-mv install-nfs-5.0/nfs/provisioner/deploy/ .
-rm -rf install-nfs-5.0/
-
-```
-
 다운로드 받은 파일들을 폐쇄망 환경으로 이동시킨 뒤 사용하려는 registry에 이미지를 push
 
 ``` shell
@@ -79,6 +69,17 @@ sudo docker tag gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:$
 sudo docker push ${REGISTRY}/k8s-staging-sig-storage/nfs-subdir-external-provisioner:${NFS_PROVISIONER_VERSION}
 
 ```
+
+배포 yaml 다운로드
+
+``` shell
+git clone https://github.com/learncloud/install-nfs-5.0.git
+mv install-nfs-5.0/nfs/provisioner/deploy/ .
+rm -rf install-nfs-5.0/
+
+```
+
+
 
 ## 배포 가이드
 
