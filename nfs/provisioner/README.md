@@ -114,7 +114,8 @@ helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs
 1. provisioner를 배포할 k8s namespace로 치환하여 namespace와 rbac 관련 리소스를 먼저 배포합니다.
 
 ``` shell
-NS={배포할 namespace name}
+#NS={배포할 namespace name}
+NS=nfs
 NAMESPACE=${NS:-nfs}
 
 sed -i'' "s/name:.*/name: $NAMESPACE/g" ./deploy/namespace.yaml
