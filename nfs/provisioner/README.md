@@ -1,3 +1,7 @@
+# 필수 인지
+- PV를사용할 모든 서버에 반드시 nfs-utils 패키지가 설치되어있어야합니다 **아닐경우 ContainerCreating중 상태로 뜸**
+- Node들이 not ready상태에서 NFS를 설치하면 Pending상태입니다.
+
 # NFS Provisioner 배포 및 사용 가이드
 
 기존에 사용하는 NFS 서버로 K8s cluster의 pv, pvc를 dynamic provisioning 하는 방법으로 본 가이드에 사용하는 nfs provisioner는 kubernetes-sigs group 내에서 개발 및 관리되고 있는 [NFS Subdir External Provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner) 입니다. 
